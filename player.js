@@ -11,6 +11,10 @@
 'use strict';
 
 var CATALOG_API = 'https://nova-catalog.oshadakalindu.workers.dev';
+// v1.0.39: watch positions go to the nova-tracking worker (Samename253)
+// so each Cloudflare account's 100k/day free budget covers a different
+// half of the app. Catalog + refresh stay on the main worker.
+var TRACKING_API = 'https://nova-tracking.samename253.workers.dev';
 var APP_KEY = '7580ce70c2f66f3c9b04de2bedb879b7'; // replaced at build time
 
 var q = new URLSearchParams(location.search);
@@ -124,9 +128,9 @@ function reportPosition(player) {
   if (pos < 10 || pos > dur - 30) return;
   var payload = JSON.stringify({ id: videoId, position: Math.floor(pos), duration: Math.floor(dur) });
   if (navigator.sendBeacon) {
-    navigator.sendBeacon(CATALOG_API + '/api/position', new Blob([payload], { type: 'application/json' }));
+    navigator.sendBeacon(TRACKING_API + '/api/position', new Blob([payload], { type: 'application/json' }));
   } else {
-    fetch(CATALOG_API + '/api/position', {
+    fetch(TRACKING_API + '/api/position', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: payload, keepalive: true
     }).catch(function(){});
