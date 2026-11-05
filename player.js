@@ -1,3 +1,4 @@
+// fbflix v2 deploy
 /* FBFLIX Pages player — static version.
  * Query params:
  *   v  = video URL (http...) OR video ID (then /refresh is used)
@@ -78,7 +79,7 @@ function resolveVideoUrl() {
 // Try to fetch poster from public catalog when not supplied via ?p=
 function maybeFetchPoster() {
   if (posterParam || window._posterUrl) return;
-  var vid = videoId || vParam;
+  var vid = (videoId || vParam).replace(/^nova:\/\//, '');
   if (!vid || /^https?:\/\//i.test(vid)) return;
   fetch(CATALOG_API + '/catalog', { headers: { 'X-App-Key': APP_KEY } })
     .then(function(r){ return r.ok ? r.json() : null; })
@@ -206,3 +207,4 @@ tapOverlay.addEventListener('pointerup', function(e){
   });
 });
 })();
+// deploy 1793801114
