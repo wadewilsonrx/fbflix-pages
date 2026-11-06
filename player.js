@@ -121,9 +121,7 @@ function startPeriodicSave(player) {
     if (player && !player.paused) {
       savePositionLocal(player);
       // Report to the server every 10s while playing (user's call,
-      // matches Zangetsu's 10s cadence) — Custom Tabs often drops the
-      // pagehide/sendBeacon on close, so positions were never reaching
-      // the server and the app's Continue Watching bars stayed empty.
+      // matches Zangetsu's 10s cadence).
       reportPosition(player);
     }
   }, 10000);
