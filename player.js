@@ -114,7 +114,16 @@ function savePositionLocal(player) {
 }
 function startPeriodicSave(player) {
   if (_saveInterval) clearInterval(_saveInterval);
-  _saveInterval = setInterval(function(){ if (player && !player.paused) savePositionLocal(player); }, 10000);
+  _saveInterval = setInterval(function(){
+    if (player && !player.paused) {
+      savePositionLocal(player);
+      // Also report to the server every 30s while playing, not just on
+      // close — Custom Tabs often drops the pagehide/sendBeacon on close,
+      // so positions were never reaching the server and the app's
+      // Continue Watching bars stayed empty.
+      reportPosition(player);
+    }
+  }, 30000);
 }
 function stopPeriodicSave() {
   if (_saveInterval) { clearInterval(_saveInterval); _saveInterval = null; }
