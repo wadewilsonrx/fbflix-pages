@@ -48,13 +48,13 @@
 <div class="wrap">
 
   <div class="setup">
-    <h3>Cloudflare API tokens</h3>
-    <p class="muted" style="margin:0">Paste one API token per account. Tokens stay in this browser only (localStorage) — they are sent only to Cloudflare's own API, nowhere else. Create one at dash.cloudflare.com → My Profile → API Tokens → Custom token, with <code>Account:Read</code> permission.</p>
-    <input id="tok_main" type="password" placeholder="Oshadakalindu account API token" autocomplete="off">
-    <input id="tok_track" type="password" placeholder="Samename253 account API token" autocomplete="off">
+    <h3>Admin keys</h3>
+    <p class="muted" style="margin:0">Paste each worker's admin key once — it stays in this browser only (localStorage). The workers already have their Cloudflare API tokens set, so no API token is needed here.</p>
+    <input id="key_main" type="password" placeholder="nova-catalog admin key (Oshadakalindu)" autocomplete="off">
+    <input id="key_track" type="password" placeholder="nova-tracking admin key (Samename253)" autocomplete="off">
     <div>
-      <button onclick="saveTokens()">Save &amp; load</button>
-      <button class="ghost" onclick="clearTokens()">Clear</button>
+      <button onclick="saveKeys()">Save &amp; load</button>
+      <button class="ghost" onclick="clearKeys()">Clear</button>
     </div>
     <div id="setup_err"></div>
   </div>
@@ -63,12 +63,12 @@
     <div class="card">
       <h2>Oshadakalindu <span>— content</span></h2>
       <div class="url">nova-catalog · catalog, refresh, dashboard</div>
-      <div id="main_body"><p class="muted">Enter the API token above to load.</p></div>
+      <div id="main_body"><p class="muted">Enter the admin key above to load.</p></div>
     </div>
     <div class="card">
       <h2>Samename253 <span>— tracking</span></h2>
       <div class="url">nova-tracking · positions, pings, stats</div>
-      <div id="track_body"><p class="muted">Enter the API token above to load.</p></div>
+      <div id="track_body"><p class="muted">Enter the admin key above to load.</p></div>
     </div>
   </div>
 
@@ -76,10 +76,9 @@
 </div>
 
 <script>
-// Account IDs (public, not secret)
-var ACCOUNTS = {
-  main:  { id: '573f9a28fb2a48c7c065c9fe6223429b', token: localStorage.getItem('cf_tok_main') || '' },
-  track: { id: '7b6e2e1c4bd848d5707f16059e81996d', token: localStorage.getItem('cf_tok_track') || '' }
+var WORKERS = {
+  main:  { url: 'https://nova-catalog.oshadakalindu.workers.dev',  key: localStorage.getItem('usage_key_main') || '' },
+  track: { url: 'https://nova-tracking.samename253.workers.dev', key: localStorage.getItem('usage_key_track') || '' }
 };
 var DAILY_LIMIT = 100000;
 var timer = null;
@@ -110,69 +109,48 @@ function renderCard(id, data, errMsg) {
     (rows ? '<div class="scripts"><h4>Requests by worker (this month)</h4>' + rows + '</div>' : '');
 }
 
-function gqlQuery(accountId, token) {
-  var now = new Date();
-  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  var q = 'query { viewer { accounts(filter: { accountTag: "' + accountId + '" }) { workersInvocationsAdaptive(filter: { date_geq: "' + monthStart + '" }, limit: 1000) { dimensions { date scriptName } sum { requests } } } } }';
-  return fetch('https://api.cloudflare.com/client/v4/graphql', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: q })
-  }).then(function(r) { return r.json(); }).then(function(d) {
-    if (d.errors && d.errors.length) throw new Error(d.errors[0].message);
-    var rows = (d.data && d.data.viewer && d.data.viewer.accounts && d.data.viewer.accounts[0] && d.data.viewer.accounts[0].workersInvocationsAdaptive) || [];
-    var today = 0, month = 0, byScript = {};
-    var todayStr = todayStart.slice(0, 10);
-    rows.forEach(function(r) {
-      var n = (r.sum && r.sum.requests) || 0;
-      month += n;
-      if (r.dimensions && r.dimensions.date && r.dimensions.date.slice(0, 10) === todayStr) today += n;
-      var s = (r.dimensions && r.dimensions.scriptName) || 'unknown';
-      byScript[s] = (byScript[s] || 0) + n;
-    });
-    return { today: today, month: month, byScript: byScript };
-  });
-}
-
-function loadOne(key, acct) {
+function loadOne(key, w) {
   var el = document.getElementById(key + '_body');
-  if (!acct.token) { el.innerHTML = '<p class="muted">No API token saved for this account.</p>'; return; }
+  if (!w.key) { el.innerHTML = '<p class="muted">No admin key saved for this worker.</p>'; return; }
   el.innerHTML = '<p class="muted">Loading…</p>';
-  gqlQuery(acct.id, acct.token)
-    .then(function(data) { renderCard(key, data, null); })
-    .catch(function(e) { renderCard(key, null, 'Could not load usage: ' + e.message); });
+  fetch(w.url + '/api/usage', { headers: { 'X-Admin-Key': w.key } })
+    .then(function(r) { return r.json().then(function(d) { return { status: r.status, d: d }; }); })
+    .then(function(res) {
+      if (res.d && res.d.error) { renderCard(key, null, 'Error: ' + res.d.error); return; }
+      renderCard(key, res.d, null);
+    })
+    .catch(function(e) { renderCard(key, null, 'Could not reach worker: ' + e.message); });
 }
 
 function loadAll() {
-  loadOne('main', ACCOUNTS.main);
-  loadOne('track', ACCOUNTS.track);
+  loadOne('main', WORKERS.main);
+  loadOne('track', WORKERS.track);
   document.getElementById('refresh_note').textContent = 'Last updated ' + new Date().toLocaleTimeString() + ' — auto-refreshes every 5 minutes.';
 }
 
-function saveTokens() {
-  var m = document.getElementById('tok_main').value.trim();
-  var t = document.getElementById('tok_track').value.trim();
-  if (m) { ACCOUNTS.main.token = m; localStorage.setItem('cf_tok_main', m); }
-  if (t) { ACCOUNTS.track.token = t; localStorage.setItem('cf_tok_track', t); }
-  if (!m && !t) { document.getElementById('setup_err').innerHTML = '<div class="err">Paste at least one API token.</div>'; return; }
+function saveKeys() {
+  var m = document.getElementById('key_main').value.trim();
+  var t = document.getElementById('key_track').value.trim();
+  if (m) { WORKERS.main.key = m; localStorage.setItem('usage_key_main', m); }
+  if (t) { WORKERS.track.key = t; localStorage.setItem('usage_key_track', t); }
+  if (!m && !t) { document.getElementById('setup_err').innerHTML = '<div class="err">Paste at least one admin key.</div>'; return; }
   document.getElementById('setup_err').innerHTML = '';
   loadAll();
 }
 
-function clearTokens() {
-  localStorage.removeItem('cf_tok_main');
-  localStorage.removeItem('cf_tok_track');
-  ACCOUNTS.main.token = ''; ACCOUNTS.track.token = '';
-  document.getElementById('tok_main').value = '';
-  document.getElementById('tok_track').value = '';
-  document.getElementById('main_body').innerHTML = '<p class="muted">Enter the API token above to load.</p>';
-  document.getElementById('track_body').innerHTML = '<p class="muted">Enter the API token above to load.</p>';
+function clearKeys() {
+  localStorage.removeItem('usage_key_main');
+  localStorage.removeItem('usage_key_track');
+  WORKERS.main.key = ''; WORKERS.track.key = '';
+  document.getElementById('key_main').value = '';
+  document.getElementById('key_track').value = '';
+  document.getElementById('main_body').innerHTML = '<p class="muted">Enter the admin key above to load.</p>';
+  document.getElementById('track_body').innerHTML = '<p class="muted">Enter the admin key above to load.</p>';
 }
 
-document.getElementById('tok_main').value = ACCOUNTS.main.token;
-document.getElementById('tok_track').value = ACCOUNTS.track.token;
-if (ACCOUNTS.main.token || ACCOUNTS.track.token) loadAll();
+document.getElementById('key_main').value = WORKERS.main.key;
+document.getElementById('key_track').value = WORKERS.track.key;
+if (WORKERS.main.key || WORKERS.track.key) loadAll();
 timer = setInterval(loadAll, 5 * 60 * 1000);
 </script>
 </body>
