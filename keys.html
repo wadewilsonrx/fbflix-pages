@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FBFLIX Admin Keys</title>
+<style>
+  body { margin: 0; background: #0b0b10; color: #eee; font-family: system-ui, sans-serif; padding: 20px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h1 span { color: #e50914; }
+  p { color: #999; font-size: 14px; margin: 0 0 20px; }
+  .key-box { background: #16161f; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .key-box h2 { margin: 0 0 8px; font-size: 16px; }
+  .key-box h2 span { color: #e50914; }
+  .key-text { font-family: monospace; font-size: 15px; word-break: break-all; background: #0b0b10; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+  button { background: #e50914; color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+  button.copied { background: #46c46a; }
+  .note { color: #888; font-size: 13px; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>FBFLIX <span>Admin Keys</span></h1>
+<p>Tap the button under each key to copy it, then paste it into the box at fbflix.site/usage</p>
+
+<div class="key-box">
+  <h2>Oshadakalindu <span>— content</span></h2>
+  <div class="key-text">f381ef9ded9091fadcebbe68</div>
+  <button onclick="copyKey(this, 'f381ef9ded9091fadcebbe68')">Tap to copy</button>
+</div>
+
+<div class="key-box">
+  <h2>Samename253 <span>— tracking</span></h2>
+  <div class="key-text">OzStze1e-0cTNdNSl4QZn932uFGrEnKumgf4onMPD0w</div>
+  <button onclick="copyKey(this, 'OzStze1e-0cTNdNSl4QZn932uFGrEnKumgf4onMPD0w')">Tap to copy</button>
+</div>
+
+<p class="note">Keep these private — they unlock your FBFLIX dashboard.</p>
+
+<script>
+function copyKey(btn, key) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(key).then(function() {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() { btn.textContent = 'Tap to copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function() { fallbackCopy(btn, key); });
+  } else {
+    fallbackCopy(btn, key);
+  }
+}
+function fallbackCopy(btn, key) {
+  var ta = document.createElement('textarea');
+  ta.value = key;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(function() { btn.textContent = 'Tap to copy'; btn.classList.remove('copied'); }, 2000); } catch(e) { btn.textContent = 'Copy failed — long-press the key above'; }
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
