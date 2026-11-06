@@ -139,14 +139,14 @@ function reportPosition(player) {
   var pos = player.currentTime || 0;
   if (pos < 10 || pos > dur - 30) return;
   var payload = JSON.stringify({ id: videoId, user: userId, position: Math.floor(pos), duration: Math.floor(dur) });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(TRACKING_API + '/api/position', new Blob([payload], { type: 'application/json' }));
-  } else {
-    fetch(TRACKING_API + '/api/position', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: payload, keepalive: true
-    }).catch(function(){});
-  }
+  // fetch with keepalive (NOT sendBeacon): sendBeacon cannot send requests
+  // that need a CORS preflight, and application/json always needs one —
+  // so every beacon was silently dropped and no positions ever reached D1.
+  // fetch+keepalive survives pagehide/unload AND handles preflight.
+  fetch(TRACKING_API + '/api/position', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: payload, keepalive: true
+  }).catch(function(){});
 }
 window.addEventListener('pagehide', function(){ reportPosition(); });
 window.addEventListener('beforeunload', function(){ reportPosition(); });
