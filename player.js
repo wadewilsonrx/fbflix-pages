@@ -6,6 +6,8 @@
  *   id = video ID (localStorage key for resume)
  *   s  = start position in seconds
  *   p  = poster image URL (optional)
+ *   u  = user/install ID — per-user positions in D1, so one user's
+ *        progress never overwrites another's (defaults to 'anon')
  */
 (function(){
 'use strict';
@@ -21,6 +23,7 @@ var q = new URLSearchParams(location.search);
 var vParam = q.get('v') || '';
 var videoTitle = q.get('t') || 'FBFLIX';
 var videoId = q.get('id') || '';
+var userId = q.get('u') || 'anon';
 var posterParam = q.get('p') || '';
 var startS = parseFloat(q.get('s') || '0');
 
@@ -117,13 +120,13 @@ function startPeriodicSave(player) {
   _saveInterval = setInterval(function(){
     if (player && !player.paused) {
       savePositionLocal(player);
-      // Also report to the server every 30s while playing, not just on
-      // close — Custom Tabs often drops the pagehide/sendBeacon on close,
-      // so positions were never reaching the server and the app's
-      // Continue Watching bars stayed empty.
+      // Report to the server every 10s while playing (user's call,
+      // matches Zangetsu's 10s cadence) — Custom Tabs often drops the
+      // pagehide/sendBeacon on close, so positions were never reaching
+      // the server and the app's Continue Watching bars stayed empty.
       reportPosition(player);
     }
-  }, 30000);
+  }, 10000);
 }
 function stopPeriodicSave() {
   if (_saveInterval) { clearInterval(_saveInterval); _saveInterval = null; }
@@ -135,7 +138,7 @@ function reportPosition(player) {
   if (!dur) return;
   var pos = player.currentTime || 0;
   if (pos < 10 || pos > dur - 30) return;
-  var payload = JSON.stringify({ id: videoId, position: Math.floor(pos), duration: Math.floor(dur) });
+  var payload = JSON.stringify({ id: videoId, user: userId, position: Math.floor(pos), duration: Math.floor(dur) });
   if (navigator.sendBeacon) {
     navigator.sendBeacon(TRACKING_API + '/api/position', new Blob([payload], { type: 'application/json' }));
   } else {
