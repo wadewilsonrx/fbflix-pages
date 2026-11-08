@@ -192,7 +192,6 @@ tapOverlay.addEventListener('pointerup', function(e){
     showSpinner();
     player.on('waiting', showSpinner);
     player.on('playing', hideSpinner);
-    player.on('canplay', hideSpinner);
     player.on('pause', hideSpinner);
     player.on('ended', hideSpinner);
 
