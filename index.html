@@ -41,6 +41,23 @@ body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; co
 .plyr { height: 100%; }
 /* Plyr red theme */
 :root { --plyr-color-main: #e50914; }
+
+/* Loading spinner — shows while the video buffers, so slow connections
+   can tell it is loading and not stuck. */
+#loadingSpinner {
+  position: fixed; inset: 0; z-index: 90;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55); pointer-events: none;
+}
+#loadingSpinner.show { display: flex; }
+.spinnerRing {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.25);
+  border-top-color: #e50914;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinnerText { margin-top: 14px; color: rgba(255,255,255,0.9); font-size: 15px; }
 </style>
 </head>
 <body>
@@ -56,10 +73,14 @@ body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; co
 
 <div id="plyrWrap">
   <video id="video" playsinline></video>
+  <div id="loadingSpinner">
+    <div class="spinnerRing"></div>
+    <div class="spinnerText">Loading video…</div>
+  </div>
 </div>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-<script src="player.js?v=4"></script>
+<script src="player.js?v=5"></script>
 <!-- Monetag Vignette Banner (zone 12214832) — loaded only when ads are enabled.
      The on/off switch lives in the admin panel (fbflix.site/admin → Settings).
      If the setting cannot be read, ads stay off. -->

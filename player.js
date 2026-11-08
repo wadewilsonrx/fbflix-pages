@@ -178,6 +178,18 @@ tapOverlay.addEventListener('pointerup', function(e){
 
     player.source = { type: 'video', sources: [{ src: videoUrl, type: 'video/mp4' }] };
 
+    // Loading spinner: show while the video buffers (slow connections),
+    // hide once it is actually playing. Reappears on mid-play buffering.
+    var spinner = document.getElementById('loadingSpinner');
+    function showSpinner(){ if (spinner) spinner.classList.add('show'); }
+    function hideSpinner(){ if (spinner) spinner.classList.remove('show'); }
+    showSpinner();
+    player.on('waiting', showSpinner);
+    player.on('playing', hideSpinner);
+    player.on('canplay', hideSpinner);
+    player.on('pause', hideSpinner);
+    player.on('ended', hideSpinner);
+
     if (startS > 0) {
       player.on('loadedmetadata', function(){ player.currentTime = startS; });
     }
