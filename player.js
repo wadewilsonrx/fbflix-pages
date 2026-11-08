@@ -180,9 +180,15 @@ tapOverlay.addEventListener('pointerup', function(e){
 
     // Loading spinner: show while the video buffers (slow connections),
     // hide once it is actually playing. Reappears on mid-play buffering.
+    // The spinner must live INSIDE Plyr's container (.plyr) — when the
+    // player goes fullscreen only that element and its descendants are
+    // shown, so a spinner left outside it is invisible in fullscreen.
     var spinner = document.getElementById('loadingSpinner');
     function showSpinner(){ if (spinner) spinner.classList.add('show'); }
     function hideSpinner(){ if (spinner) spinner.classList.remove('show'); }
+    if (player.elements && player.elements.container && spinner) {
+      player.elements.container.appendChild(spinner);
+    }
     showSpinner();
     player.on('waiting', showSpinner);
     player.on('playing', hideSpinner);
