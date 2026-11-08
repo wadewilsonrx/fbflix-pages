@@ -27,6 +27,15 @@ var userId = q.get('u') || 'anon';
 var posterParam = q.get('p') || '';
 var startS = parseFloat(q.get('s') || '0');
 
+// Landing mode: no video ID in the URL. The landing page (index.html)
+// handles the UI — do nothing here so no /refresh, catalog, or
+// position-report call is ever made without a video.
+if (!vParam && !videoId) {
+  window.FBFLIX_LANDING = true;
+  return;
+}
+window.FBFLIX_LANDING = false;
+
 var tapOverlay = document.getElementById('tapOverlay');
 var tapTitle = document.getElementById('tapTitle');
 var tapSub = document.getElementById('tapSub');
