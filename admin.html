@@ -91,6 +91,7 @@
       <button type="button" data-tab="catalog" class="active">Catalog</button>
       <button type="button" data-tab="usage">Usage</button>
       <button type="button" data-tab="analytics">Analytics</button>
+      <button type="button" data-tab="settings">Settings</button>
       <button type="button" id="logout_btn" class="grey">Log out</button>
     </div>
   </header>
@@ -190,6 +191,19 @@
         <a class="galink" href="https://analytics.google.com/" target="_blank" rel="noopener">Open Google Analytics</a>
       </div>
       <div class="err" id="stats_err"></div>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" style="display:none">
+      <div class="card">
+        <h3>Ads — Monetag Vignette</h3>
+        <div class="row" style="align-items:center">
+          <label style="flex:1" for="ads_toggle">Show ads on the player</label>
+          <input type="checkbox" id="ads_toggle" style="width:22px;height:22px">
+        </div>
+        <div class="muted" style="margin-top:8px">When ON, the Vignette ad loads on the player page (fbflix.site). When OFF, no ad script loads at all. Takes effect on the next video page load — no app update needed.</div>
+        <div class="muted" id="ads_msg" style="margin-top:8px"></div>
+      </div>
     </section>
 
   </div>

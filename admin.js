@@ -113,10 +113,10 @@
 
   /* ---------- Tabs ---------- */
 
-  var loaded = { usage: false, analytics: false };
+  var loaded = { usage: false, analytics: false, settings: false };
 
   function switchTab(name) {
-    var tabs = ['catalog', 'usage', 'analytics'];
+    var tabs = ['catalog', 'usage', 'analytics', 'settings'];
     tabs.forEach(function (t) {
       $('tab-' + t).style.display = (t === name) ? 'block' : 'none';
     });
@@ -127,6 +127,42 @@
     });
     if (name === 'usage' && !loaded.usage) { loaded.usage = true; loadUsage(); }
     if (name === 'analytics' && !loaded.analytics) { loaded.analytics = true; loadStats(); }
+    if (name === 'settings' && !loaded.settings) { loaded.settings = true; loadAdsSetting(); }
+  }
+
+  /* ---------- Settings: ads on/off ---------- */
+
+  function loadAdsSetting() {
+    var msg = $('ads_msg');
+    fetch(API + '/api/ads')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        $('ads_toggle').checked = !!(d && d.enabled);
+        if (msg) msg.textContent = d && d.enabled ? 'Ads are ON.' : 'Ads are OFF.';
+      })
+      .catch(function () {
+        if (msg) msg.textContent = 'Could not read the current setting — check your connection.';
+      });
+  }
+
+  function saveAdsSetting() {
+    var on = $('ads_toggle').checked;
+    var msg = $('ads_msg');
+    if (msg) msg.textContent = 'Saving…';
+    fetch(API + '/api/settings', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ ads_enabled: on })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (msg) msg.textContent = (d && d.ok) ? (on ? 'Ads are ON — the Vignette will load on the next video page.' : 'Ads are OFF — no ad script will load.') : 'Save failed — try again.';
+        if (!(d && d.ok)) $('ads_toggle').checked = !on;
+      })
+      .catch(function () {
+        if (msg) msg.textContent = 'Could not reach the server — try again.';
+        $('ads_toggle').checked = !on;
+      });
   }
 
   /* ---------- Catalog: form ---------- */
@@ -587,6 +623,7 @@
   $('save_btn').addEventListener('click', saveItem);
   $('clear_btn').addEventListener('click', clearForm);
   $('usage_refresh_btn').addEventListener('click', loadUsage);
+  $('ads_toggle').addEventListener('change', saveAdsSetting);
 
   typeChanged();
 
