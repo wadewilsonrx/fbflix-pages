@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var API = 'https://nova-catalog.oshadakalindu.workers.dev';
+  var API = 'https://api.fbflix.site';
   var STORE_KEY = 'fbflix_admin_key';
   var DAILY_LIMIT = 100000;
 

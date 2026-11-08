@@ -12,7 +12,7 @@
 (function(){
 'use strict';
 
-var CATALOG_API = 'https://nova-catalog.oshadakalindu.workers.dev';
+var CATALOG_API = 'https://api.fbflix.site';
 // v1.0.39: watch positions go to the nova-tracking worker (Samename253)
 // so each Cloudflare account's 100k/day free budget covers a different
 // half of the app. Catalog + refresh stay on the main worker.

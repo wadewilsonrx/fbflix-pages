@@ -124,7 +124,7 @@ html[data-mode="player"] body { overflow: hidden; }
     // enabled. The on/off switch lives in the admin panel
     // (fbflix.site/admin → Settings). If the setting cannot be read,
     // ads stay off.
-    fetch('https://nova-catalog.oshadakalindu.workers.dev/api/ads')
+    fetch('https://api.fbflix.site/api/ads')
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (d && d.enabled) {
