@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FBFLIX Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0b0b10; color: #eee; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: #14141d; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid #e50914; }
+  header b { font-size: 20px; }
+  header b span { color: #e50914; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs button { background: #26262f; }
+  .tabs button.active { background: #e50914; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .card { background: #16161f; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  h3 { margin: 4px 0 12px; font-size: 17px; }
+  input, select, textarea { width: 100%; background: #0e0e14; color: #eee; border: 1px solid #333; border-radius: 8px; padding: 10px; margin: 5px 0; font-size: 15px; }
+  button { background: #e50914; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  button.grey { background: #333; }
+  button.sm { padding: 6px 10px; font-size: 13px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .muted { color: #999; font-size: 13px; }
+  .err { color: #ff6b6b; font-size: 14px; margin-top: 10px; min-height: 18px; }
+  #login { max-width: 420px; margin: 80px auto; }
+  #login h3 { text-align: center; font-size: 20px; }
+  #login button { width: 100%; margin-top: 6px; }
+  .posters { display: flex; gap: 10px; overflow-x: auto; padding: 8px 0; }
+  .posters img { width: 92px; height: 138px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; background: #222; }
+  .posters img:hover { border-color: #e50914; }
+  .item { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #26262f; }
+  .item img { width: 46px; height: 69px; object-fit: cover; border-radius: 6px; background: #222; flex-shrink: 0; }
+  .item .info { flex: 1; min-width: 0; }
+  .item .info b { display: block; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+  .badge.si { background: #1d4d2b; color: #7be495; }
+  .badge.en { background: #3a2f10; color: #ffcf5c; }
+  .badge.fb { background: #1d2f55; color: #8fb8ff; }
+  .ep { display: flex; gap: 6px; align-items: center; }
+  .ep input { margin: 2px 0; }
+  .ep input.no { flex: 0 0 52px; }
+  .ep input.season { flex: 0 0 64px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .big { font-size: 40px; font-weight: 700; line-height: 1; }
+  .big.warn { color: #ffb020; }
+  .big.over { color: #e50914; }
+  .label { color: #999; font-size: 13px; margin-top: 4px; }
+  .bar-outer { background: #26262f; border-radius: 6px; height: 10px; margin: 12px 0 4px; overflow: hidden; }
+  .bar-inner { height: 100%; background: #46c46a; border-radius: 6px; transition: width .4s; }
+  .bar-inner.warn { background: #ffb020; }
+  .bar-inner.over { background: #e50914; }
+  .pct { font-size: 13px; color: #999; }
+  .pct.warn { color: #ffb020; }
+  .pct.over { color: #e50914; }
+  .kv { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1d1d26; font-size: 14px; }
+  .kv .k { color: #aaa; }
+  .kv .v { font-weight: 600; }
+  .scripts { margin-top: 14px; }
+  .scripts h4 { margin: 0 0 6px; font-size: 13px; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+  .errbox { background: #2a1414; border: 1px solid #e50914; border-radius: 8px; padding: 12px; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: #16161f; border-radius: 12px; padding: 16px; }
+  .stat .num { font-size: 30px; font-weight: 700; }
+  .stat .lbl { color: #999; font-size: 13px; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #26262f; }
+  th { color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .galink { color: #8fb8ff; }
+  .season-btns { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .ep-btn { width: 100%; text-align: left; margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<!-- Login gate: the ONLY thing visible before a successful login. -->
+<div id="login" class="card">
+  <h3>FBFLIX Admin</h3>
+  <input id="admin_key" type="password" placeholder="Admin key" autocomplete="off">
+  <button id="login_btn" type="button">Log in</button>
+  <div class="err" id="login_err"></div>
+</div>
+
+<!-- Main panel: hidden until login succeeds. -->
+<div id="panel" style="display:none">
+  <header>
+    <b>FBFLIX <span>Admin</span></b>
+    <div class="tabs">
+      <button type="button" data-tab="catalog" class="active">Catalog</button>
+      <button type="button" data-tab="usage">Usage</button>
+      <button type="button" data-tab="analytics">Analytics</button>
+      <button type="button" id="logout_btn" class="grey">Log out</button>
+    </div>
+  </header>
+  <div class="wrap">
+
+    <!-- Catalog -->
+    <section id="tab-catalog">
+      <div class="card">
+        <h3>Add / edit title</h3>
+        <input type="hidden" id="f_id">
+        <input type="hidden" id="f_tmdb">
+        <div class="row">
+          <input id="f_title" placeholder="Title">
+          <select id="f_type">
+            <option value="movie">Movie</option>
+            <option value="series">Series</option>
+          </select>
+        </div>
+        <button type="button" class="grey" id="tmdb_search_btn">&#128269; Search TMDB</button>
+        <div class="posters" id="tmdb_results"></div>
+        <div class="row">
+          <input id="f_year" placeholder="Year">
+          <input id="f_rating" placeholder="Rating">
+        </div>
+        <textarea id="f_overview" rows="3" placeholder="Overview / synopsis"></textarea>
+        <input id="f_poster" placeholder="Poster URL (auto-filled from TMDB, or paste your own)">
+        <input id="f_backdrop" placeholder="Backdrop URL (optional)">
+        <div id="movie_url">
+          <input id="f_url" placeholder="MP4 URL (your own file)">
+          <input id="f_fbid" placeholder="Facebook Video ID (optional — ID only; the link is fetched for you)">
+          <div class="muted">Use a direct MP4 URL <i>or</i> a Facebook video ID. With an ID, FBFLIX fetches the link once when you save, and the player refreshes it only after it expires.</div>
+        </div>
+        <div id="eps" style="display:none">
+          <div class="muted" style="margin:6px 0">Episodes — pick from TMDB, or add manually below</div>
+          <div id="ep_picker" style="margin:6px 0">
+            <button type="button" class="grey sm" id="seasons_btn">Show seasons from TMDB</button>
+            <span class="muted" id="season_msg"></span>
+            <div class="season-btns" id="season_list"></div>
+            <div id="episode_list"></div>
+          </div>
+          <div id="ep_list"></div>
+          <button type="button" class="grey sm" id="add_ep_btn">+ Add episode</button>
+        </div>
+        <div style="margin-top:12px" class="row">
+          <button type="button" id="save_btn">Save to catalog</button>
+          <button type="button" class="grey" id="clear_btn">Clear</button>
+        </div>
+        <div class="muted" id="form_msg"></div>
+      </div>
+
+      <div class="card">
+        <h3>Catalog (<span id="count">0</span>)</h3>
+        <div id="items"></div>
+      </div>
+    </section>
+
+    <!-- Usage -->
+    <section id="tab-usage" style="display:none">
+      <div class="card">
+        <div class="row">
+          <h3 style="flex:1">Worker usage</h3>
+          <button type="button" class="grey sm" id="usage_refresh_btn">Refresh</button>
+        </div>
+        <div class="grid">
+          <div class="card" style="margin-bottom:0">
+            <h3>Oshadakalindu <span style="color:#e50914">— content</span></h3>
+            <div class="muted" style="margin-bottom:16px">nova-catalog · catalog, refresh, dashboard</div>
+            <div id="main_body"><p class="muted">Loading…</p></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <h3>Samename253 <span style="color:#e50914">— tracking</span></h3>
+            <div class="muted" style="margin-bottom:16px">nova-tracking · positions, pings, stats</div>
+            <div id="track_body"><p class="muted">Loading…</p></div>
+          </div>
+        </div>
+        <div class="muted" id="usage_note" style="margin-top:16px;text-align:center"></div>
+      </div>
+    </section>
+
+    <!-- Analytics -->
+    <section id="tab-analytics" style="display:none">
+      <div class="stats">
+        <div class="stat"><div class="num" id="stat_installs">—</div><div class="lbl">Total installs</div></div>
+        <div class="stat"><div class="num" id="stat_opens">—</div><div class="lbl">Total opens</div></div>
+        <div class="stat"><div class="num" id="stat_plays">—</div><div class="lbl">Total plays</div></div>
+        <div class="stat"><div class="num" id="stat_dau">—</div><div class="lbl">Active today</div></div>
+      </div>
+      <div class="card">
+        <h3>Top videos</h3>
+        <div id="top_list"><p class="muted">Loading…</p></div>
+      </div>
+      <div class="card">
+        <h3>Activity — last 14 days</h3>
+        <div id="days_wrap"><p class="muted">Loading…</p></div>
+      </div>
+      <div class="card">
+        <a class="galink" href="https://analytics.google.com/" target="_blank" rel="noopener">Open Google Analytics</a>
+      </div>
+      <div class="err" id="stats_err"></div>
+    </section>
+
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
